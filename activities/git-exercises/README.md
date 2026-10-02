@@ -14,11 +14,11 @@ My Git configuration uses my student ID number without the hyphen, as instructed
 
 ## Submitted Screenshots
 
-| Exercise No. | Exercise Title   | Screenshot File                 |
-|--------------|------------------|---------------------------------|
-| 01           | <Exercise Title> | `fabrigar_charlson_01.png`      |
-| 02           | <Exercise Title> | `<lastname>_<firstname>_02.png` |
-| 03           | <Exercise Title> | `<lastname>_<firstname>_03.png` |
+| Exercise No. | Exercise Title   | Screenshot File                                      |
+|--------------|------------------|------------------------------------------------------|
+| 01           | master           | [fabrigar_charlson_01.png](fabrigar_charlson_01.png) |
+| 02           | <Exercise Title> | `<lastname>_<firstname>_02.png`                      |
+| 03           | <Exercise Title> | `<lastname>_<firstname>_03.png`                      |
 
 > Add, remove, or update rows based on the exercises you completed.
 
