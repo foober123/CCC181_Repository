@@ -16,21 +16,11 @@ My Git configuration uses my student ID number without the hyphen, as instructed
 
 | Exercise No. | Exercise Title   | Screenshot File                                      |
 |--------------|------------------|------------------------------------------------------|
-| 01           | master           | [fabrigar_charlson_01.png](fabrigar_charlson_01.png) |
+| 01           | master           | [fabrigar_Charlson_01.png](fabrigar_Charlson_01.png) |
 | 02           | <Exercise Title> | `<lastname>_<firstname>_02.png`                      |
 | 03           | <Exercise Title> | `<lastname>_<firstname>_03.png`                      |
 
 > Add, remove, or update rows based on the exercises you completed.
-
-## Folder Contents
-
-```text
-activities/git-exercises/
-├── README.md
-├── <lastname>_<firstname>_01.png
-├── <lastname>_<firstname>_02.png
-└── <lastname>_<firstname>_03.png
-```
 
 ## Declaration
 
