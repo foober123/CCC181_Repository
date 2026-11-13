@@ -1,5 +1,5 @@
-# Trucking Queue:
-Implement for small businesses that displays incoming and outgoing deliveries.
+# Delivery Queue:
+Implement for small businesses that displays incoming and outgoing orders. Walk-in orders are included
 
 ## 1. Set up the Python environment
 
