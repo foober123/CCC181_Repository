@@ -60,7 +60,7 @@ Mr. Cartso opens his store and 3 customers go to the store at the same time. He 
 | Check Pending Orders                 | My place | FR-02          |
 | Mark Order as Complete               | Staff    | FR-03          |
 | Mark Order as Cancelled              | Staff    | FR-04          |
-| View Order Details                   | Staff    | FR-05          |
+| View Order Details                   | Staff    | FR-06          |
 
 ### What this means for my interface
 
