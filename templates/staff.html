@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>Hello, {{ name }}!</p>
+
+<h1>Orders In Queue</h1>
+
+<!-- ORDER FILTERS -->
+<div class="mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+
+        <a href="{{ url_for('index', filter='progress') }}"
+           class="btn {{ 'btn-primary' if filter_status == 'progress' else 'btn-outline-primary' }}">
+            In Progress
+        </a>
+
+        <a href="{{ url_for('index', filter='1') }}"
+           class="btn {{ 'btn-warning' if filter_status == '1' else 'btn-outline-warning' }}">
+            Waiting
+        </a>
+
+        <a href="{{ url_for('index', filter='2') }}"
+           class="btn {{ 'btn-info' if filter_status == '2' else 'btn-outline-info' }}">
+            In Transit
+        </a>
+
+        <a href="{{ url_for('index', filter='all') }}"
+           class="btn {{ 'btn-secondary' if filter_status == 'all' else 'btn-outline-secondary' }}">
+            All Orders
+        </a>
+
+    </div>
+</div>
+
+
+<div class="tickets">
+  {% for t in tickets %}
+
+    <div class="card mb-3 shadow-sm">
+      <div class="card-body">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+          <!-- LEFT: Ticket Information -->
+          <div>
+            <h2 class="h5">
+              <a href="{{ url_for('ticket', ticket_id=t.number) }}">
+                Ticket #{{ t.number }}
+              </a>
+            </h2>
+
+            <p class="mb-1">
+              <strong>Name:</strong> {{ t.name }}
+            </p>
+
+            <p class="mb-1">
+              <strong>Service:</strong>
+              {{ services.get(t.service_id, "Unknown service") }}
+            </p>
+
+            <p class="mb-0">
+              <strong>Status:</strong>
+
+              <span class="badge
+                {% if t.status_id == 1 %}bg-warning text-dark
+                {% elif t.status_id == 2 %}bg-info
+                {% elif t.status_id == 3 %}bg-success
+                {% elif t.status_id == 4 %}bg-danger
+                {% elif t.status_id == 5 %}bg-primary
+                {% endif %}">
+                {{ status.get(t.status_id, "Unknown Status") }}
+              </span>
+            </p>
+          </div>
+
+          <!-- RIGHT: Staff Action Buttons -->
+          {% if t.status_id not in [3, 4] %}
+
+            <div class="d-flex gap-2 flex-wrap justify-content-end">
+
+              <!-- In Transit: Delivery Only -->
+              {% if t.service_id == 1 and t.status_id != 5 %}
+                <form method="POST"
+                      action="{{ url_for('update_ticket', ticket_id=t.number, action='in-transit') }}">
+                  <button type="submit" class="btn btn-primary btn-lg">
+                    In Transit
+                  </button>
+                </form>
+              {% endif %}
+
+              <!-- Complete -->
+              <form method="POST"
+                    action="{{ url_for('update_ticket', ticket_id=t.number, action='complete') }}">
+                <button type="submit" class="btn btn-success btn-lg">
+                  Complete
+                </button>
+              </form>
+
+              <!-- Cancelled -->
+              <form method="POST"
+                    action="{{ url_for('update_ticket', ticket_id=t.number, action='cancel') }}">
+                <button type="submit" class="btn btn-danger btn-lg">
+                  Cancel
+                </button>
+              </form>
+
+            </div>
+
+          {% endif %}
+
+        </div>
+
+
+      </div>
+    </div>
+
+  {% else %}
+    <p>The queue is empty.</p>
+  {% endfor %}
+</div>
+
+{% endblock %}

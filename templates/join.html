@@ -4,27 +4,59 @@
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-12 col-md-8 col-lg-6">
+
     <h1 class="h3 mb-3">Place An Order</h1>
 
-    <form method="post" action="{{ url_for('join') }}" novalidate id="join-form">
+    <form method="post"
+          action="{{ url_for('join') }}"
+          novalidate
+          id="join-form">
 
       <!-- Customer Name -->
       <div class="mb-3">
-        <label for="name" class="form-label">Customer Name</label>
-        <input id="name" name="name" type="text" autocomplete="name" required
-               class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
-               value="{{ form.get('name', '') }}">
+        <label for="name" class="form-label">
+          Customer Name
+        </label>
+
+        <input
+          id="name"
+          name="name"
+          type="text"
+          autocomplete="name"
+          required
+          aria-invalid="{{ 'true' if errors and errors.name else 'false' }}"
+          {% if errors and errors.name %}
+            aria-describedby="name-error"
+          {% endif %}
+          class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
+          value="{{ form.get('name', '') }}"
+        >
+
         {% if errors and errors.name %}
-          <div class="invalid-feedback">{{ errors.name }}</div>
+          <div id="name-error" class="invalid-feedback">
+            {{ errors.name }}
+          </div>
         {% endif %}
       </div>
 
       <!-- Service -->
       <div class="mb-3">
-        <label for="service_id" class="form-label">Service</label>
-        <select id="service_id" name="service_id" required
-                class="form-select {% if errors and errors.service_id %}is-invalid{% endif %}">
+        <label for="service_id" class="form-label">
+          Service
+        </label>
+
+        <select
+          id="service_id"
+          name="service_id"
+          required
+          aria-invalid="{{ 'true' if errors and errors.service_id else 'false' }}"
+          {% if errors and errors.service_id %}
+            aria-describedby="service-error"
+          {% endif %}
+          class="form-select {% if errors and errors.service_id %}is-invalid{% endif %}"
+        >
           <option value="">Choose a service...</option>
+
           {% for s in services %}
             <option value="{{ s.id }}"
               {% if form.get('service_id') == s.id|string %}selected{% endif %}>
@@ -32,49 +64,83 @@
             </option>
           {% endfor %}
         </select>
+
         {% if errors and errors.service_id %}
-          <div class="invalid-feedback">{{ errors.service_id }}</div>
+          <div id="service-error" class="invalid-feedback">
+            {{ errors.service_id }}
+          </div>
         {% endif %}
       </div>
 
       <!-- Customer Orders -->
       <hr>
+
       <h2 class="h5 mb-3">Your Order</h2>
-        {% if errors and errors.orders %}
-          <div class="alert alert-danger">
-            {{ errors.orders }}
-          </div>
-        {% endif %}
+
+      {% if errors and errors.orders %}
+        <div class="alert alert-danger" role="alert">
+          {{ errors.orders }}
+        </div>
+      {% endif %}
 
       <div id="orders-container">
 
+        <!-- First Order Row -->
         <div class="order-row row g-2 mb-3">
+
           <div class="col-7">
-            <label class="form-label">Item</label>
-            <input type="text" name="item[]" class="form-control"
-                   placeholder="e.g. Beer" required>
+            <label for="item-1" class="form-label">
+              Item
+            </label>
+
+            <input
+              type="text"
+              id="item-1"
+              name="item[]"
+              class="form-control"
+              placeholder="e.g. Beer"
+              required
+            >
           </div>
 
           <div class="col-3">
-            <label class="form-label">Quantity</label>
-            <input type="number" name="quantity[]" class="form-control"
-                   min="1" value="1" required>
+            <label for="quantity-1" class="form-label">
+              Quantity
+            </label>
+
+            <input
+              type="number"
+              id="quantity-1"
+              name="quantity[]"
+              class="form-control"
+              min="1"
+              value="1"
+              required
+            >
           </div>
 
           <div class="col-2 d-flex align-items-end">
-            <button type="button" class="btn btn-outline-danger remove-order"
-                    disabled>
+            <button
+              type="button"
+              class="btn btn-outline-danger remove-order"
+              aria-label="Remove item 1"
+              disabled
+            >
               X
             </button>
           </div>
+
         </div>
 
       </div>
 
       <!-- Add Another Item -->
-      <button type="button" id="add-order"
-              class="btn btn-outline-primary mb-3">
-        + Add Another Item
+      <button
+        type="button"
+        id="add-order"
+        class="btn btn-outline-primary mb-3"
+      >
+        <span aria-hidden="true">+</span> Add Another Item
       </button>
 
       <hr>
@@ -87,22 +153,38 @@
     </form>
   </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
   const container = document.getElementById("orders-container");
   const addButton = document.getElementById("add-order");
 
+  let rowCount = 1;
+
   function updateRemoveButtons() {
+
     const rows = container.querySelectorAll(".order-row");
 
-    rows.forEach(row => {
-      row.querySelector(".remove-order").disabled = rows.length === 1;
+    rows.forEach((row, index) => {
+
+      const button = row.querySelector(".remove-order");
+
+      button.disabled = rows.length === 1;
+
+      button.setAttribute(
+        "aria-label",
+        `Remove item ${index + 1}`
+      );
+
     });
   }
 
   addButton.addEventListener("click", function () {
+
+    rowCount++;
 
     const row = document.createElement("div");
 
@@ -110,37 +192,75 @@ document.addEventListener("DOMContentLoaded", function () {
 
     row.innerHTML = `
       <div class="col-7">
-        <label class="form-label">Item</label>
-        <input type="text" name="item[]" class="form-control"
-               placeholder="e.g. Coke" required>
+
+        <label for="item-${rowCount}" class="form-label">
+          Item
+        </label>
+
+        <input
+          type="text"
+          id="item-${rowCount}"
+          name="item[]"
+          class="form-control"
+          placeholder="e.g. Coke"
+          required
+        >
+
       </div>
 
       <div class="col-3">
-        <label class="form-label">Quantity</label>
-        <input type="number" name="quantity[]" class="form-control"
-               min="1" value="1" required>
+
+        <label for="quantity-${rowCount}" class="form-label">
+          Quantity
+        </label>
+
+        <input
+          type="number"
+          id="quantity-${rowCount}"
+          name="quantity[]"
+          class="form-control"
+          min="1"
+          value="1"
+          required
+        >
+
       </div>
 
       <div class="col-2 d-flex align-items-end">
-        <button type="button"
-                class="btn btn-outline-danger remove-order">
+
+        <button
+          type="button"
+          class="btn btn-outline-danger remove-order"
+          aria-label="Remove item ${rowCount}"
+        >
           X
         </button>
+
       </div>
     `;
 
     container.appendChild(row);
+
     updateRemoveButtons();
+
   });
 
   container.addEventListener("click", function (event) {
-    if (event.target.classList.contains("remove-order")) {
-      event.target.closest(".order-row").remove();
+
+    const removeButton = event.target.closest(".remove-order");
+
+    if (removeButton) {
+
+      removeButton.closest(".order-row").remove();
+
       updateRemoveButtons();
+
     }
+
   });
+
+  updateRemoveButtons();
 
 });
 </script>
-
 {% endblock %}

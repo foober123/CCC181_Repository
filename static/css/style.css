@@ -49,3 +49,100 @@ footer {
   color: #5A6272;
   padding: 2rem 0;
 }
+
+.navbar[data-bs-theme="dark"] .navbar-nav .nav-link {
+    color: #FFFFFF;
+    opacity: 1;
+    font-weight: 500;
+}
+
+.navbar[data-bs-theme="dark"] .navbar-nav .nav-link:hover,
+.navbar[data-bs-theme="dark"] .navbar-nav .nav-link:focus {
+    color: #FFFFFF;
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.navbar[data-bs-theme="dark"] .navbar-nav .nav-link.active {
+    color: #FFFFFF;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.navbar[data-bs-theme="dark"] .navbar-brand {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+/* Ticket list scrolling */
+.tickets {
+    max-height: 75vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Prevent horizontal overflow */
+.tickets .card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Keep buttons from forcing horizontal scrolling */
+.tickets .card-body {
+    min-width: 0;
+}
+
+.tickets .d-flex {
+    flex-wrap: wrap;
+}
+
+.ticket-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.ticket-actions form {
+    margin: 0;
+}
+
+.ticket-actions .btn {
+    font-size: 13px;
+    padding: 6px 10px;
+    white-space: nowrap;
+}
+
+/* Ticket layout */
+.tickets .card-body > .d-flex {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Mobile adjustments */
+@media (max-width: 576px) {
+
+    .tickets .card-body > .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .ticket-actions {
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .ticket-actions .btn {
+        font-size: 12px;
+        padding: 5px 9px;
+    }
+
+}
+

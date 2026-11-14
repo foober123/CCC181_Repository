@@ -1,9 +1,104 @@
 {% extends "base.html" %}
 
-{% block title %}Ticket #{{ ticket_id }} · ClinicQ{% endblock %}
-
 {% block content %}
-  <h2>Ticket #{{ ticket_id }}</h2>
-  <p>This page was built from the URL <code>/queue/{{ ticket_id }}</code>.</p>
-  <p><a href="{{ url_for('index') }}">&larr; Back to the queue</a></p>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+
+        <div class="text-center mb-4">
+          <h2 class="h3">Your Order</h2>
+          <h1 class="display-4 fw-bold">#{{ ticket.number }}</h1>
+        <span class="badge ms-2
+          {% if ticket.status_id == 1 %}bg-warning text-dark
+          {% elif ticket.status_id == 2 %}bg-info
+          {% elif ticket.status_id == 3 %}bg-success
+          {% elif ticket.status_id == 4 %}bg-danger
+          {% elif ticket.status_id == 5 %}bg-primary
+          {% endif %}">
+          {{ status.get(ticket.status_id, "Unknown Status") }}
+        </span>
+        </div>
+
+        <hr>
+
+        <h5>Customer Information</h5>
+
+        <p>
+          <strong>Customer Name:</strong>
+          {{ ticket.name }}
+        </p>
+
+        <p>
+          <strong>Service:</strong>
+          {{ service.name }}
+        </p>
+
+        <hr>
+
+        <h5>Your Order</h5>
+
+        {% if ticket.orders %}
+          <ul class="list-group mb-3">
+            {% for order in ticket.orders %}
+              <li class="list-group-item d-flex justify-content-between">
+                <span>{{ order.item }}</span>
+                <span class="badge bg-primary rounded-pill">
+                  x{{ order.quantity }}
+                </span>
+              </li>
+            {% endfor %}
+          </ul>
+
+          <p class="text-end">
+            <strong>
+              Total Items:
+              {{ ticket.orders | sum(attribute='quantity') }}
+            </strong>
+          </p>
+        {% else %}
+          <p class="text-muted">No orders found.</p>
+        {% endif %}
+
+        <hr>
+
+        <div class="text-center">
+          <p>
+            <strong>Orders Ahead:</strong>
+            {{ ahead }}
+          </p>
+
+          <a href="{{ url_for('index') }}"
+             class="btn btn-outline-primary">
+            &larr; Back to the queue
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const statusUrl = "{{ url_for('ticket_status', ticket_id=ticket.number) }}";
+  async function refreshStatus() {
+    try {
+      const res = await fetch(statusUrl);
+      if (!res.ok) return;
+      const data = await res.json();
+      console.print("successfully refreshed")  
+      // Update the badge text and the "people ahead" sentence here,
+      // using the ids you gave them in Part 6.
+    } catch (err) {
+      console.warn("Could not refresh status", err);
+    }
+  }
+  setInterval(refreshStatus, 10000);
+</script>
 {% endblock %}
