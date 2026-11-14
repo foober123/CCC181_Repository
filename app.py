@@ -43,12 +43,45 @@ def index():
     services = {s["id"]: s["name"] for s in SERVICES}
     status = {s["id"]: s["name"] for s in STATUS}
 
+    # Get selected filter from URL
+    filter_status = request.args.get("filter", "progress")
+
+    # Filter tickets on the server
+    if filter_status == "progress":
+        filtered_tickets = [
+            t for t in TICKETS
+            if t["status_id"] in (1, 2)
+        ]
+
+    elif filter_status == "1":
+        filtered_tickets = [
+            t for t in TICKETS
+            if t["status_id"] == 1
+        ]
+
+    elif filter_status == "2":
+        filtered_tickets = [
+            t for t in TICKETS
+            if t["status_id"] == 2
+        ]
+
+    elif filter_status == "all":
+        filtered_tickets = TICKETS
+
+    else:
+        filter_status = "progress"
+        filtered_tickets = [
+            t for t in TICKETS
+            if t["status_id"] in (1, 2)
+        ]
+
     return render_template(
-        "index.html",
+        "staff.html",
         name="Admin",
-        tickets=TICKETS,
+        tickets=filtered_tickets,
         services=services,
-        status=status
+        status=status,
+        filter_status=filter_status
     )
 
 @app.get("/queue/<int:ticket_id>")
