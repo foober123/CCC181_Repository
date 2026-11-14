@@ -32,6 +32,7 @@ Manang In-In opens her business and gets a delivery on call. After receiving the
 
 1. Because staff prioritize deliveries by location, the interface needs to display delivery addresses prominently.
 2. Because staff receive orders from multiple customers, the interface needs to display customer names on ticket cards.
+3. Because some orders are closer to the store. the interface needs the ability to change statuses of orders at any order Manang In-In needs   
 
 ## Cartso, small business owner of beverage warehouse that only offers pickup
 
