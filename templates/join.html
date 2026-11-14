@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Place An Order · Delivery Queue{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h1 class="h3 mb-3">Place An Order</h1>
+
+    <form method="post" action="{{ url_for('join') }}" novalidate id="join-form">
+
+      <!-- Customer Name -->
+      <div class="mb-3">
+        <label for="name" class="form-label">Customer Name</label>
+        <input id="name" name="name" type="text" autocomplete="name" required
+               class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
+               value="{{ form.get('name', '') }}">
+        {% if errors and errors.name %}
+          <div class="invalid-feedback">{{ errors.name }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Service -->
+      <div class="mb-3">
+        <label for="service_id" class="form-label">Service</label>
+        <select id="service_id" name="service_id" required
+                class="form-select {% if errors and errors.service_id %}is-invalid{% endif %}">
+          <option value="">Choose a service...</option>
+          {% for s in services %}
+            <option value="{{ s.id }}"
+              {% if form.get('service_id') == s.id|string %}selected{% endif %}>
+              {{ s.name }}
+            </option>
+          {% endfor %}
+        </select>
+        {% if errors and errors.service_id %}
+          <div class="invalid-feedback">{{ errors.service_id }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Customer Orders -->
+      <hr>
+      <h2 class="h5 mb-3">Your Order</h2>
+        {% if errors and errors.orders %}
+          <div class="alert alert-danger">
+            {{ errors.orders }}
+          </div>
+        {% endif %}
+
+      <div id="orders-container">
+
+        <div class="order-row row g-2 mb-3">
+          <div class="col-7">
+            <label class="form-label">Item</label>
+            <input type="text" name="item[]" class="form-control"
+                   placeholder="e.g. Beer" required>
+          </div>
+
+          <div class="col-3">
+            <label class="form-label">Quantity</label>
+            <input type="number" name="quantity[]" class="form-control"
+                   min="1" value="1" required>
+          </div>
+
+          <div class="col-2 d-flex align-items-end">
+            <button type="button" class="btn btn-outline-danger remove-order"
+                    disabled>
+              X
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Add Another Item -->
+      <button type="button" id="add-order"
+              class="btn btn-outline-primary mb-3">
+        + Add Another Item
+      </button>
+
+      <hr>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary w-100">
+        Get a ticket
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const container = document.getElementById("orders-container");
+  const addButton = document.getElementById("add-order");
+
+  function updateRemoveButtons() {
+    const rows = container.querySelectorAll(".order-row");
+
+    rows.forEach(row => {
+      row.querySelector(".remove-order").disabled = rows.length === 1;
+    });
+  }
+
+  addButton.addEventListener("click", function () {
+
+    const row = document.createElement("div");
+
+    row.className = "order-row row g-2 mb-3";
+
+    row.innerHTML = `
+      <div class="col-7">
+        <label class="form-label">Item</label>
+        <input type="text" name="item[]" class="form-control"
+               placeholder="e.g. Coke" required>
+      </div>
+
+      <div class="col-3">
+        <label class="form-label">Quantity</label>
+        <input type="number" name="quantity[]" class="form-control"
+               min="1" value="1" required>
+      </div>
+
+      <div class="col-2 d-flex align-items-end">
+        <button type="button"
+                class="btn btn-outline-danger remove-order">
+          X
+        </button>
+      </div>
+    `;
+
+    container.appendChild(row);
+    updateRemoveButtons();
+  });
+
+  container.addEventListener("click", function (event) {
+    if (event.target.classList.contains("remove-order")) {
+      event.target.closest(".order-row").remove();
+      updateRemoveButtons();
+    }
+  });
+
+});
+</script>
+
+{% endblock %}
