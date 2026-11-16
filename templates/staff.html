@@ -8,31 +8,43 @@
 
 <!-- ORDER FILTERS -->
 <div class="mb-4">
-    <div class="d-flex gap-2 flex-wrap">
+    <div class="d-flex align-items-center flex-wrap gap-2">
 
-        <a href="{{ url_for('index', filter='progress') }}"
-           class="btn {{ 'btn-primary' if filter_status == 'progress' else 'btn-outline-primary' }}">
-            In Progress
-        </a>
+        <!-- LEFT: Filter Buttons -->
+        <div class="d-flex gap-2 flex-wrap">
 
-        <a href="{{ url_for('index', filter='1') }}"
-           class="btn {{ 'btn-warning' if filter_status == '1' else 'btn-outline-warning' }}">
-            Waiting
-        </a>
+            <a href="{{ url_for('index', filter='progress') }}"
+               class="btn {{ 'btn-primary' if filter_status == 'progress' else 'btn-outline-primary' }}">
+                In Progress
+            </a>
 
-        <a href="{{ url_for('index', filter='2') }}"
-           class="btn {{ 'btn-info' if filter_status == '2' else 'btn-outline-info' }}">
-            In Transit
-        </a>
+            <a href="{{ url_for('index', filter='1') }}"
+               class="btn {{ 'btn-warning' if filter_status == '1' else 'btn-outline-warning' }}">
+                Waiting
+            </a>
 
-        <a href="{{ url_for('index', filter='all') }}"
-           class="btn {{ 'btn-secondary' if filter_status == 'all' else 'btn-outline-secondary' }}">
-            All Orders
-        </a>
+            <a href="{{ url_for('index', filter='2') }}"
+               class="btn {{ 'btn-info' if filter_status == '2' else 'btn-outline-info' }}">
+                In Transit
+            </a>
+
+            <a href="{{ url_for('index', filter='all') }}"
+               class="btn {{ 'btn-secondary' if filter_status == 'all' else 'btn-outline-secondary' }}">
+                All Orders
+            </a>
+
+        </div>
+
+        <!-- RIGHT: Place Order Button -->
+        <div class="ms-auto">
+            <a href="{{ url_for('join_form') }}"
+               class="btn btn-success place-order-btn ms-auto">
+                <strong>+ PLACE ORDER</strong>
+            </a>
+        </div>
 
     </div>
 </div>
-
 
 <div class="tickets">
   {% for t in tickets %}
@@ -80,7 +92,7 @@
             <div class="d-flex gap-2 flex-wrap justify-content-end">
 
               <!-- In Transit: Delivery Only -->
-              {% if t.service_id == 1 and t.status_id != 5 %}
+              {% if t.service_id == 1 and t.status_id == 1 %}
                 <form method="POST"
                       action="{{ url_for('update_ticket', ticket_id=t.number, action='in-transit') }}">
                   <button type="submit" class="btn btn-primary btn-lg">
