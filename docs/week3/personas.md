@@ -2,7 +2,8 @@
 
 > "Nalimtan nako ang order. ugma nalang nako na i-deliver"
 
-*Photo or sketch* | ![p](images/in-in.webp) |
+| *Photo or sketch*          | ![p](images/in-in.webp)                                                                       |
+|----------------------------|-----------------------------------------------------------------------------------------------|
 | *Age, role and background* | 44, Runs a small business that delivers beverages to restaurants and stores                   |
 | *Goals*                    | Keep Track of Unresolved Orders, Make sure every delivery call gets an answer                 |
 | *Frustrations*             | Orders are sometimes kept on paper, Orders that are texted can be forgotten about for the day |
@@ -35,7 +36,8 @@ Manang In-In opens her business and gets a delivery on call. After receiving the
 
 > "Wala lagi to siya ni anhi diri, basin ugma ra"
 
-*Photo or sketch* | ![pa](images/cartso.png) |
+|*Photo or sketch* | ![pa](images/cartso.png) |
+|---|---|
 | *Age, role and background* | 50, Runs a small business that only takes pick up orders and walk-in                                                      |
 | *Goals*                    | Minimize the time customers spend collecting their purchases.                                                             |
 | *Frustrations*             | Customers complain because they are served out of sequence, Customers compete for attention instead of following the line |

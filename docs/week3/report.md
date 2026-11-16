@@ -12,6 +12,7 @@ Mr. Cartso, Business owner of a warehouse that only takes walkins. 50 Y.O man wi
 
 ## Screens
 | Screenshot                                             | Persona      | Requirements               |
+|--------------------------------------------------------|--------------|----------------------------|
 | [Join, Phone/Tablet](screenshots/join_phone.png)       | Manang In-In | FR-01                      |
 | [Staff, Phone/Tablet](screenshots/staff_phone.png)     | Manang In-In | FR-02, FR-03, FR-04, FR-05 |
 | [Ticket, Phone/Tablet](screenshots/ticket_phone.png)   | Manang In-In | FR-06                      |
