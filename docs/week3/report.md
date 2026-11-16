@@ -1,8 +1,12 @@
 # Week 3 report
 App: Delivery Queue, Order Tracking system for walk-ins and deliveries
+
 Setting: Beverage Warehouse
+
 Name: Charlson Y. Fabrigar
+
 ID: 2024-0796
+
 Date: November 16, 2026
 
 ## Personas
@@ -24,8 +28,11 @@ Mr. Cartso, Business owner of a warehouse that only takes walkins. 50 Y.O man wi
 1. Light mode because persona with tablet or mobile device might use queuing app outdoors. [Sources](https://www.mockplus.com/blog/post/dark-mode-vs-light-mode-which-one-is-better) say that light mode is easier to read in natural or artificial light
 2. Order Details are omitted from the dashboard because it needs to stay brief. Order of tickets is the concern and adding orders to dashboard tickets causes information overload. Details can be checked in the my place page for verifying purposes
 
+## Accessibility
+All screens score over 90 in the lighthouse test. Keyboard test is doable because buttons are styled with visual cues when highlighted (e.g. underline or button darkening)
+
 ## Usability
-I let my mother test the application and she took 5 mins to complete an order. She hesitated when adding an order and found a stale button
+I let my mother test the application and she took 5 mins to complete an order. She hesitated when adding an order and found a stale button.
 
 ## Reflection
 * Hardest part: getting used to Python and Web development. There is no `while(1)` loop for me to add features in and I spent more time adjusting to python syntax and the flask framework than reasoning API boundaries
