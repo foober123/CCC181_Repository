@@ -25,7 +25,7 @@
 | ---    | ---                                                                                       | ---            | ---      |
 | NFR-01 | App will restrict access to authorized business owners                                    | Security       | Could    |
 | NFR-02 | The system retains order details and status changes. No duplicated records during testing | Data Integrity | Must     |
-| NFR-03 | System records date and time when an order's status is changed                            | Auditability   | Could    |
+| NFR-03 | System history that records date and time when an order's status is changed               | Auditability   | Could    |
 | NFR-04 | App loads within 3 seconds                                                                | Performance    | Must     |
 
 
