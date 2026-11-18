@@ -286,6 +286,59 @@ def hello():
     return "Hello, CCC181!"
 
 
+@app.cli.command("seed")
+def seed():
+    """Add sample orders and order items if they don't exist yet."""
+
+    # Check whether sample orders already exist
+    exists = db.session.scalar(
+        db.select(Order).filter_by(customer_name="$RESTAURANT")
+    )
+
+    if exists is not None:
+        print("Sample orders already exist.")
+        return
+
+    # First sample order
+    order1 = Order(
+        customer_name="$RESTAURANT",
+        order_type="DELIVERY",
+        address="123 Main Street",
+        status="WAITING",
+        items=[
+            OrderItem(
+                product_name="Cola 1L",
+                quantity=5
+            )
+        ],
+        status_history=[
+            OrderStatusHistory(status="WAITING")
+        ]
+    )
+
+    # Second sample order
+    order2 = Order(
+        customer_name="$BAR",
+        order_type="DELIVERY",
+        address="456 Bar Street",
+        status="WAITING",
+        items=[
+            OrderItem(
+                product_name="Vodka Case",
+                quantity=2
+            )
+        ],
+        status_history=[
+            OrderStatusHistory(status="WAITING")
+        ]
+    )
+
+    db.session.add_all([order1, order2])
+    db.session.commit()
+
+    print("Sample orders and items are ready.")
+
+
 if __name__ == "__main__":
     # Lets you also start the app with: python app.py
     app.run(debug=True)
