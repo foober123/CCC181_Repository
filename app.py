@@ -6,339 +6,399 @@ from flask import (
     render_template, request, url_for, jsonify
 )
 from flask_migrate import Migrate
-from sqlalchemy import func
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
+from datetime import timedelta, timezone
 
 from models import Order, OrderItem, OrderStatusHistory, db
 
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "dev-only-change-me"  # Week 11 moves this into an environment variable
+app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
+
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = os.environ.get("SQLALCHEMY_ECHO") == "1"
 
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# Sample data for the demo. A real app would load this from a database later.
-SERVICES = [
-    {"id": 1, "name": "Delivery"},
-    {"id": 2, "name": "Walk-in"},
+PH_TIME = timezone(timedelta(hours=8))
 
-]
 
-STATUS = [
-    {"id": 1, "name": "Waiting"},
-    {"id": 2, "name": "In Transit"},
-    {"id": 3, "name": "Complete"},
-    {"id": 4, "name": "Cancelled"},
-]
+@app.template_filter("local")
+def local_time(value):
+    """Display timestamps in Philippine time."""
+    return (
+        value.astimezone(PH_TIME).strftime("%b %d, %I:%M %p")
+        if value else ""
+    )
 
-TICKETS = [
-        {"number": 1, 
-         "name": "$RESTAURANT", 
-         "service_id": 1, 
-         "status_id": 1,
-         "orders": [
-            {"item": "Cola 1L", "quantity": 5}
-             ]
-         },
 
-        {"number": 2, 
-         "name": "$BAR", 
-         "service_id": 1, 
-         "status_id": 1,
-         "orders": [
-            {"item": "Vodka Case", "quantity": 2}
-             ]
-         },
-]
+def get_people_ahead(order):
+    """Count waiting orders of the same type placed before this order."""
+
+    return Order.query.filter(
+        Order.order_type == order.order_type,
+        Order.status == "WAITING",
+        or_(
+            Order.created_at < order.created_at,
+            and_(
+                Order.created_at == order.created_at,
+                Order.id < order.id
+            )
+        )
+    ).count()
+
+
 
 @app.route("/")
 def index():
-    services = {s["id"]: s["name"] for s in SERVICES}
-    status = {s["id"]: s["name"] for s in STATUS}
-
-    # Get selected filter from URL
     filter_status = request.args.get("filter", "progress")
 
-    # Filter tickets on the server
+    query = Order.query
+
     if filter_status == "progress":
-        filtered_tickets = [
-            t for t in TICKETS
-            if t["status_id"] in (1, 2)
-        ]
+        query = query.filter(
+            Order.status.in_(["WAITING", "IN_TRANSIT"])
+        )
 
     elif filter_status == "1":
-        filtered_tickets = [
-            t for t in TICKETS
-            if t["status_id"] == 1
-        ]
+        query = query.filter(Order.status == "WAITING")
 
     elif filter_status == "2":
-        filtered_tickets = [
-            t for t in TICKETS
-            if t["status_id"] == 2
-        ]
+        query = query.filter(Order.status == "IN_TRANSIT")
 
-    elif filter_status == "all":
-        filtered_tickets = TICKETS
-
-    else:
+    elif filter_status != "all":
         filter_status = "progress"
-        filtered_tickets = [
-            t for t in TICKETS
-            if t["status_id"] in (1, 2)
-        ]
+        query = query.filter(
+            Order.status.in_(["WAITING", "IN_TRANSIT"])
+        )
+
+    orders = query.order_by(Order.created_at.asc(), Order.id.asc()).all()
 
     return render_template(
         "staff.html",
         name="Admin",
-        tickets=filtered_tickets,
-        services=services,
-        status=status,
+        tickets=orders,
         filter_status=filter_status
     )
 
+
+
 @app.get("/queue/<int:ticket_id>")
 def ticket(ticket_id):
-    t = next(
-        (t for t in TICKETS if t["number"] == ticket_id),
-        None
-    )
+    order = db.session.get(Order, ticket_id)
 
-    if t is None:
+    if order is None:
         abort(404)
 
-    ahead = sum(
-        1 for x in TICKETS
-        if x["service_id"] == t["service_id"]
-        and x["status_id"] == 1
-        and x["number"] < t["number"]
-    )
-
-    service = next(
-        s for s in SERVICES
-        if s["id"] == t["service_id"]
-    )
-
-    status = {s["id"]: s["name"] for s in STATUS}
+    ahead = get_people_ahead(order)
 
     return render_template(
         "ticket.html",
-        ticket=t,
-        service=service,
-        ahead=ahead,
-        status=status
+        ticket=order,
+        ahead=ahead
     )
+
+
 
 @app.get("/api/tickets/<int:ticket_id>/status")
 def ticket_status(ticket_id):
-    t = next(
-        (t for t in TICKETS if t["number"] == ticket_id),
-        None
-    )
+    order = db.session.get(Order, ticket_id)
 
-    if t is None:
+    if order is None:
         abort(404)
 
-    ahead = sum(
-        1 for x in TICKETS
-        if x["service_id"] == t["service_id"]
-        and x["status_id"] == 1
-        and x["number"] < t["number"]
-    )
-
-    status = next(
-        (s["name"] for s in STATUS if s["id"] == t["status_id"]),
-        "Unknown"
-    )
+    ahead = get_people_ahead(order)
 
     return jsonify({
-        "ticket_number": t["number"],
-        "name": t["name"],
-        "status": status,
+        "ticket_number": order.id,
+        "name": order.customer_name,
+        "status": order.status,
         "people_ahead": ahead
     })
 
 
+
 @app.get("/staff")
 def staff_dashboard():
-    service_id = request.args.get("service_id", type=int)
+    order_type = request.args.get("order_type")
 
-    # Waiting or Called tickets
-    queue = [
-        t for t in TICKETS
-        if t["status_id"] in (1, 2)
-    ]
+    query = Order.query.filter(
+        Order.status.in_(["WAITING", "IN_TRANSIT"])
+    )
 
-    if service_id:
-        queue = [
-            t for t in queue
-            if t["service_id"] == service_id
-        ]
+    if order_type in ["DELIVERY", "WALK_IN"]:
+        query = query.filter(Order.order_type == order_type)
 
-    names = {s["id"]: s["name"] for s in SERVICES}
-    status = {s["id"]: s["name"] for s in STATUS}
+    orders = query.order_by(
+        Order.created_at.asc(),
+        Order.id.asc()
+    ).all()
 
     return render_template(
         "staff.html",
-        queue=queue,
-        services=SERVICES,
-        names=names,
-        status=status,
-        selected=service_id
+        queue=orders,
+        selected=order_type
     )
+
+
 
 @app.post("/tickets/<int:ticket_id>/<action>")
 def update_ticket(ticket_id, action):
+    order = db.session.get(Order, ticket_id)
 
-    new_status = {
-        "in-transit": 2,
-        "complete": 3,
-        "cancel": 4
-    }.get(action)
-
-    t = next(
-        (t for t in TICKETS if t["number"] == ticket_id),
-        None
-    )
-
-    if t is None or new_status is None:
+    if order is None:
         abort(404)
 
-    # In Transit is only allowed for Delivery
-    if action == "in-transit" and t["service_id"] != 1:
+    new_status = {
+        "in-transit": "IN_TRANSIT",
+        "complete": "COMPLETE",
+        "cancel": "CANCELLED"
+    }.get(action)
+
+    if new_status is None:
+        abort(404)
+
+    # Only delivery orders can be marked in transit
+    if action == "in-transit" and order.order_type != "DELIVERY":
         abort(400)
 
-    t["status_id"] = new_status
+    order.status = new_status
+
+    # Save status history
+    history = OrderStatusHistory(
+        order_id=order.id,
+        status=new_status
+    )
+
+    db.session.add(history)
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash("Unable to update order status.", "danger")
+        return redirect(url_for("index"))
 
     flash(
-        f"Ticket #{ticket_id} marked as {STATUS[new_status - 1]['name']}.",
+        f"Order #{ticket_id} marked as {new_status}.",
         "success"
     )
 
     return redirect(url_for("index"))
 
+
+
 @app.get("/join")
 def join_form():
-    return render_template("join.html", services=SERVICES, form={})
+    return render_template("join.html", form={})
+
+
 
 @app.post("/join")
 def join():
     form = request.form
+
     name = form.get("name", "").strip().upper()
-    service_id = form.get("service_id", type=int)
+    order_type = form.get("order_type", "").strip().upper()
+    address = form.get("address", "").strip() or None
 
     errors = {}
 
-    if not name:
-        errors["name"] = "Enter your name."
+    if not name or len(name) > 120:
+        errors["name"] = "Enter your name (up to 120 characters)."
 
-    if service_id not in [s["id"] for s in SERVICES]:
-        errors["service_id"] = "Choose a service."
+    if order_type not in ["DELIVERY", "WALK_IN"]:
+        errors["order_type"] = "Choose a valid order type."
 
-    # Get ordered items
-    orders = []
+    if order_type == "DELIVERY" and not address:
+        errors["address"] = "Enter your delivery address."
 
+    if address and order_type == "WALK_IN":
+        address = None
+
+    # Collect order items
     items = form.getlist("item[]")
     quantities = form.getlist("quantity[]")
 
-    for item, quantity in zip(items, quantities):
-        item = item.strip()
+    order_items = []
 
-        if item and quantity.isdigit() and int(quantity) > 0:
-            orders.append({
-                "item": item,
-                "quantity": int(quantity)
-            })
+    if len(items) != len(quantities):
+        errors["orders"] = "Invalid order items."
 
-    if not orders:
-        errors["orders"] = "Add at least one order."
+    else:
+        for item, quantity in zip(items, quantities):
+            item = item.strip()
+
+            # Ignore completely empty rows
+            if not item and not quantity:
+                continue
+
+            if not item:
+                errors["orders"] = "Enter a product name."
+                break
+
+            if len(item) > 120:
+                errors["orders"] = "Product names must be 120 characters or less."
+                break
+
+            if not quantity.isdigit() or int(quantity) <= 0:
+                errors["orders"] = "Enter a valid quantity."
+                break
+
+            order_items.append(
+                OrderItem(
+                    product_name=item,
+                    quantity=int(quantity)
+                )
+            )
+
+    if not order_items:
+        errors["orders"] = "Add at least one order item."
 
     if errors:
         flash("Please fix the highlighted fields.", "danger")
+
         return render_template(
             "join.html",
-            services=SERVICES,
             form=form,
             errors=errors
         ), 400
 
-    number = TICKETS[-1]["number"] + 1 if TICKETS else 1
+    new_order = Order(
+        customer_name=name,
+        order_type=order_type,
+        address=address,
+        status="WAITING",
+        items=order_items,
+        status_history=[
+            OrderStatusHistory(status="WAITING")
+        ]
+    )
 
-    TICKETS.append({
-        "number": number,
-        "name": name,
-        "service_id": service_id,
-        "status_id": 1,
-        "orders": orders
-    })
+    db.session.add(new_order)
 
-    flash(f"You joined the queue. Your ticket is #{number}.", "success")
+    try:
+        db.session.commit()
 
-    return redirect(url_for("ticket", ticket_id=number))
+    except IntegrityError:
+        db.session.rollback()
+
+        flash("Something went wrong saving your order. Please try again.", "danger")
+
+        return render_template(
+            "join.html",
+            form=form,
+            errors={}
+        ), 409
+
+    flash(
+        f"You joined the queue. Your order is #{new_order.id}.",
+        "success"
+    )
+
+    return redirect(url_for("ticket", ticket_id=new_order.id))
+
+
+# --------------------------------------------------
+# HELLO
+# --------------------------------------------------
 
 @app.route("/hello")
 def hello():
-    # The plain-string version from the Routes slide.
     return "Hello, CCC181!"
 
 
+# --------------------------------------------------
+# DATABASE SEED
+# --------------------------------------------------
+
 @app.cli.command("seed")
 def seed():
-    """Add sample orders and order items if they don't exist yet."""
+    """Add sample orders if they don't already exist."""
 
-    # Check whether sample orders already exist
-    exists = db.session.scalar(
-        db.select(Order).filter_by(customer_name="$RESTAURANT")
-    )
+    samples = [
+        {
+            "customer_name": "$RESTAURANT",
+            "order_type": "DELIVERY",
+            "address": "123 Main Street",
+            "items": [
+                ("Cola 1L", 5)
+            ]
+        },
+        {
+            "customer_name": "$BAR",
+            "order_type": "DELIVERY",
+            "address": "456 Bar Street",
+            "items": [
+                ("Vodka Case", 2)
+            ]
+        }
+    ]
 
-    if exists is not None:
-        print("Sample orders already exist.")
-        return
+    for sample in samples:
 
-    # First sample order
-    order1 = Order(
-        customer_name="$RESTAURANT",
-        order_type="DELIVERY",
-        address="123 Main Street",
-        status="WAITING",
-        items=[
-            OrderItem(
-                product_name="Cola 1L",
-                quantity=5
+        exists = db.session.scalar(
+            db.select(Order).filter_by(
+                customer_name=sample["customer_name"]
             )
-        ],
-        status_history=[
-            OrderStatusHistory(status="WAITING")
-        ]
-    )
+        )
 
-    # Second sample order
-    order2 = Order(
-        customer_name="$BAR",
-        order_type="DELIVERY",
-        address="456 Bar Street",
-        status="WAITING",
-        items=[
-            OrderItem(
-                product_name="Vodka Case",
-                quantity=2
-            )
-        ],
-        status_history=[
-            OrderStatusHistory(status="WAITING")
-        ]
-    )
+        if exists is not None:
+            continue
 
-    db.session.add_all([order1, order2])
-    db.session.commit()
+        order = Order(
+            customer_name=sample["customer_name"],
+            order_type=sample["order_type"],
+            address=sample["address"],
+            status="WAITING",
+            items=[
+                OrderItem(
+                    product_name=item,
+                    quantity=quantity
+                )
+                for item, quantity in sample["items"]
+            ],
+            status_history=[
+                OrderStatusHistory(status="WAITING")
+            ]
+        )
 
-    print("Sample orders and items are ready.")
+        db.session.add(order)
 
+    try:
+        db.session.commit()
+        print("Sample orders and items are ready.")
+
+    except IntegrityError:
+        db.session.rollback()
+        print("Unable to seed sample orders.")
+
+@app.post("/staff/tickets/<int:ticket_id>/delete")
+def delete_ticket(ticket_id):
+    order = db.session.get(Order, ticket_id)
+
+    if order is None:
+        abort(404)
+
+    db.session.delete(order)
+
+    try:
+        db.session.commit()
+        flash(f"Order #{ticket_id} was deleted.", "warning")
+
+    except IntegrityError:
+        db.session.rollback()
+        flash("Unable to delete this order.", "danger")
+
+    return redirect(url_for("index"))
+
+
+# --------------------------------------------------
+# RUN APPLICATION
+# --------------------------------------------------
 
 if __name__ == "__main__":
-    # Lets you also start the app with: python app.py
     app.run(debug=True)

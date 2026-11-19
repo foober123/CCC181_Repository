@@ -10,7 +10,6 @@
 <div class="mb-4">
     <div class="d-flex align-items-center flex-wrap gap-2">
 
-        <!-- LEFT: Filter Buttons -->
         <div class="d-flex gap-2 flex-wrap">
 
             <a href="{{ url_for('index', filter='progress') }}"
@@ -35,10 +34,9 @@
 
         </div>
 
-        <!-- RIGHT: Place Order Button -->
         <div class="ms-auto">
             <a href="{{ url_for('join_form') }}"
-               class="btn btn-success place-order-btn ms-auto">
+               class="btn btn-success place-order-btn">
                 <strong>+ PLACE ORDER</strong>
             </a>
         </div>
@@ -46,90 +44,117 @@
     </div>
 </div>
 
+<!-- ORDERS -->
 <div class="tickets">
-  {% for t in tickets %}
+
+    {% for t in tickets %}
 
     <div class="card mb-3 shadow-sm">
-      <div class="card-body">
+        <div class="card-body">
 
-        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
 
-          <!-- LEFT: Ticket Information -->
-          <div>
-            <h2 class="h5">
-              <a href="{{ url_for('ticket', ticket_id=t.number) }}">
-                Ticket #{{ t.number }}
-              </a>
-            </h2>
+                <!-- LEFT: ORDER INFORMATION -->
+                <div>
+                    <h2 class="h5">
+                        <a href="{{ url_for('ticket', ticket_id=t.id) }}">
+                            Order #{{ t.id }}
+                        </a>
+                    </h2>
 
-            <p class="mb-1">
-              <strong>Name:</strong> {{ t.name }}
-            </p>
+                    <p class="mb-1">
+                        <strong>Customer:</strong> {{ t.customer_name }}
+                    </p>
 
-            <p class="mb-1">
-              <strong>Service:</strong>
-              {{ services.get(t.service_id, "Unknown service") }}
-            </p>
+                    <p class="mb-1">
+                        <strong>Order Type:</strong> {{ t.order_type.replace('_', ' ') }}
+                    </p>
 
-            <p class="mb-0">
-              <strong>Status:</strong>
+                    {% if t.address %}
+                    <p class="mb-1">
+                        <strong>Address:</strong> {{ t.address }}
+                    </p>
+                    {% endif %}
 
-              <span class="badge
-                {% if t.status_id == 1 %}bg-warning text-dark
-                {% elif t.status_id == 2 %}bg-info
-                {% elif t.status_id == 3 %}bg-success
-                {% elif t.status_id == 4 %}bg-danger
-                {% elif t.status_id == 5 %}bg-primary
-                {% endif %}">
-                {{ status.get(t.status_id, "Unknown Status") }}
-              </span>
-            </p>
-          </div>
+                    <p class="mb-1">
+                        <strong>Items:</strong>
+                    </p>
 
-          <!-- RIGHT: Staff Action Buttons -->
-          {% if t.status_id not in [3, 4] %}
+                    <ul class="mb-2">
+                        {% for item in t.items %}
+                        <li>
+                            {{ item.product_name }} × {{ item.quantity }}
+                        </li>
+                        {% endfor %}
+                    </ul>
 
-            <div class="d-flex gap-2 flex-wrap justify-content-end">
+                    <p class="mb-0">
+                        <strong>Status:</strong>
 
-              <!-- In Transit: Delivery Only -->
-              {% if t.service_id == 1 and t.status_id == 1 %}
-                <form method="POST"
-                      action="{{ url_for('update_ticket', ticket_id=t.number, action='in-transit') }}">
-                  <button type="submit" class="btn btn-primary btn-lg">
-                    In Transit
-                  </button>
-                </form>
-              {% endif %}
+                        <span class="badge
+                            {% if t.status == 'WAITING' %}bg-warning text-dark
+                            {% elif t.status == 'IN_TRANSIT' %}bg-info text-dark
+                            {% elif t.status == 'COMPLETE' %}bg-success
+                            {% elif t.status == 'CANCELLED' %}bg-danger
+                            {% endif %}">
+                            {{ t.status.replace('_', ' ') }}
+                        </span>
+                    </p>
+                </div>
 
-              <!-- Complete -->
-              <form method="POST"
-                    action="{{ url_for('update_ticket', ticket_id=t.number, action='complete') }}">
-                <button type="submit" class="btn btn-success btn-lg">
-                  Complete
-                </button>
-              </form>
+                <!-- RIGHT: STAFF ACTION BUTTONS -->
+                {% if t.status in ['WAITING', 'IN_TRANSIT'] %}
 
-              <!-- Cancelled -->
-              <form method="POST"
-                    action="{{ url_for('update_ticket', ticket_id=t.number, action='cancel') }}">
-                <button type="submit" class="btn btn-danger btn-lg">
-                  Cancel
-                </button>
-              </form>
+                <div class="d-flex gap-2 flex-wrap justify-content-end">
+
+                    <!-- IN TRANSIT: DELIVERY ONLY -->
+                    {% if t.order_type == 'DELIVERY' and t.status == 'WAITING' %}
+                    <form method="POST"
+                          action="{{ url_for('update_ticket', ticket_id=t.id, action='in-transit') }}">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            In Transit
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- COMPLETE -->
+                    <form method="POST"
+                          action="{{ url_for('update_ticket', ticket_id=t.id, action='complete') }}">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            Complete
+                        </button>
+                    </form>
+
+                    <!-- CANCEL -->
+                    <form method="POST"
+                          action="{{ url_for('update_ticket', ticket_id=t.id, action='cancel') }}">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            Cancel
+                        </button>
+                    </form>
+
+                    <form method="POST"
+                          action="{{ url_for('delete_ticket', ticket_id=t.id) }}"
+                          data-confirm="Delete order {{ t.id }}? This cannot be undone.">
+
+                        <button type="submit" class="btn btn-outline-danger">
+                            Delete
+                        </button>
+                    </form>
+
+                </div>
+
+                {% endif %}
 
             </div>
 
-          {% endif %}
-
         </div>
-
-
-      </div>
     </div>
 
-  {% else %}
-    <p>The queue is empty.</p>
-  {% endfor %}
-</div>
+    {% else %}
+        <p>The queue is empty.</p>
+    {% endfor %}
 
+</div>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}

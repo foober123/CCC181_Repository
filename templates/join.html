@@ -14,67 +14,77 @@
 
       <!-- Customer Name -->
       <div class="mb-3">
-        <label for="name" class="form-label">
-          Customer Name
-        </label>
+        <label for="name" class="form-label">Customer Name</label>
 
         <input
           id="name"
           name="name"
           type="text"
           autocomplete="name"
+          maxlength="120"
           required
-          aria-invalid="{{ 'true' if errors and errors.name else 'false' }}"
-          {% if errors and errors.name %}
-            aria-describedby="name-error"
-          {% endif %}
           class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
           value="{{ form.get('name', '') }}"
         >
 
         {% if errors and errors.name %}
-          <div id="name-error" class="invalid-feedback">
-            {{ errors.name }}
-          </div>
+          <div class="invalid-feedback">{{ errors.name }}</div>
         {% endif %}
       </div>
 
-      <!-- Service -->
+      <!-- Order Type -->
       <div class="mb-3">
-        <label for="service_id" class="form-label">
-          Service
-        </label>
+        <label for="order_type" class="form-label">Order Type</label>
 
         <select
-          id="service_id"
-          name="service_id"
+          id="order_type"
+          name="order_type"
           required
-          aria-invalid="{{ 'true' if errors and errors.service_id else 'false' }}"
-          {% if errors and errors.service_id %}
-            aria-describedby="service-error"
-          {% endif %}
-          class="form-select {% if errors and errors.service_id %}is-invalid{% endif %}"
+          class="form-select {% if errors and errors.order_type %}is-invalid{% endif %}"
         >
-          <option value="">Choose a service...</option>
+          <option value="">Choose an order type...</option>
 
-          {% for s in services %}
-            <option value="{{ s.id }}"
-              {% if form.get('service_id') == s.id|string %}selected{% endif %}>
-              {{ s.name }}
-            </option>
-          {% endfor %}
+          <option value="DELIVERY"
+            {% if form.get('order_type') == 'DELIVERY' %}selected{% endif %}>
+            Delivery
+          </option>
+
+          <option value="WALK_IN"
+            {% if form.get('order_type') == 'WALK_IN' %}selected{% endif %}>
+            Walk-in
+          </option>
         </select>
 
-        {% if errors and errors.service_id %}
-          <div id="service-error" class="invalid-feedback">
-            {{ errors.service_id }}
-          </div>
+        {% if errors and errors.order_type %}
+          <div class="invalid-feedback">{{ errors.order_type }}</div>
         {% endif %}
       </div>
 
-      <!-- Customer Orders -->
+      <!-- Delivery Address -->
+      <div class="mb-3">
+        <label for="address" class="form-label">Delivery Address</label>
+
+        <input
+          id="address"
+          name="address"
+          type="text"
+          class="form-control {% if errors and errors.address %}is-invalid{% endif %}"
+          placeholder="Enter your delivery address"
+          value="{{ form.get('address', '') }}"
+        >
+
+        <div class="form-text" id="address-help">
+          Required for delivery orders. Not needed for walk-in orders.
+        </div>
+
+        {% if errors and errors.address %}
+          <div class="invalid-feedback">{{ errors.address }}</div>
+        {% endif %}
+      </div>
+
       <hr>
 
+      <!-- Customer Orders -->
       <h2 class="h5 mb-3">Your Order</h2>
 
       {% if errors and errors.orders %}
@@ -85,52 +95,90 @@
 
       <div id="orders-container">
 
-        <!-- First Order Row -->
-        <div class="order-row row g-2 mb-3">
+        {% set saved_items = form.getlist('item[]') if form.getlist is defined else [] %}
+        {% set saved_quantities = form.getlist('quantity[]') if form.getlist is defined else [] %}
 
-          <div class="col-7">
-            <label for="item-1" class="form-label">
-              Item
-            </label>
+        {% if saved_items %}
+          {% for item in saved_items %}
+            <div class="order-row row g-2 mb-3">
 
-            <input
-              type="text"
-              id="item-1"
-              name="item[]"
-              class="form-control"
-              placeholder="e.g. Beer"
-              required
-            >
+              <div class="col-7">
+                <label for="item-{{ loop.index }}" class="form-label">Item</label>
+                <input
+                  type="text"
+                  id="item-{{ loop.index }}"
+                  name="item[]"
+                  class="form-control"
+                  placeholder="e.g. Cola 1L"
+                  maxlength="120"
+                  value="{{ item }}"
+                  required
+                >
+              </div>
+
+              <div class="col-3">
+                <label for="quantity-{{ loop.index }}" class="form-label">Quantity</label>
+                <input
+                  type="number"
+                  id="quantity-{{ loop.index }}"
+                  name="quantity[]"
+                  class="form-control"
+                  min="1"
+                  value="{{ saved_quantities[loop.index0] if loop.index0 < saved_quantities|length else '1' }}"
+                  required
+                >
+              </div>
+
+              <div class="col-2 d-flex align-items-end">
+                <button
+                  type="button"
+                  class="btn btn-outline-danger remove-order"
+                  aria-label="Remove item {{ loop.index }}"
+                >X</button>
+              </div>
+
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="order-row row g-2 mb-3">
+
+            <div class="col-7">
+              <label for="item-1" class="form-label">Item</label>
+              <input
+                type="text"
+                id="item-1"
+                name="item[]"
+                class="form-control"
+                placeholder="e.g. Cola 1L"
+                maxlength="120"
+                required
+              >
+            </div>
+
+            <div class="col-3">
+              <label for="quantity-1" class="form-label">Quantity</label>
+              <input
+                type="number"
+                id="quantity-1"
+                name="quantity[]"
+                class="form-control"
+                min="1"
+                value="1"
+                required
+              >
+            </div>
+
+            <div class="col-2 d-flex align-items-end">
+              <button
+                type="button"
+                class="btn btn-outline-danger remove-order"
+                aria-label="Remove item 1"
+                disabled
+              >X</button>
+            </div>
+
           </div>
-
-          <div class="col-3">
-            <label for="quantity-1" class="form-label">
-              Quantity
-            </label>
-
-            <input
-              type="number"
-              id="quantity-1"
-              name="quantity[]"
-              class="form-control"
-              min="1"
-              value="1"
-              required
-            >
-          </div>
-
-          <div class="col-2 d-flex align-items-end">
-            <button
-              type="button"
-              class="btn btn-outline-danger remove-order"
-              aria-label="Remove item 1"
-              disabled
-            >
-              X
-            </button>
-          </div>
-
-        </div>
+        {% endif %}
 
       </div>
 
@@ -147,7 +195,7 @@
 
       <!-- Submit -->
       <button type="submit" class="btn btn-primary w-100">
-        Get a ticket
+        Place Order
       </button>
 
     </form>
@@ -161,59 +209,62 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const container = document.getElementById("orders-container");
   const addButton = document.getElementById("add-order");
+  const orderType = document.getElementById("order_type");
+  const address = document.getElementById("address");
 
-  let rowCount = 1;
+  let rowCount = container.querySelectorAll(".order-row").length;
 
+  // Enable address only for delivery orders
+  function updateAddressField() {
+    const isDelivery = orderType.value === "DELIVERY";
+
+    address.disabled = !isDelivery;
+    address.required = isDelivery;
+
+    if (!isDelivery) {
+      address.value = "";
+      address.classList.remove("is-invalid");
+    }
+  }
+
+  orderType.addEventListener("change", updateAddressField);
+  updateAddressField();
+
+  // Update remove buttons
   function updateRemoveButtons() {
-
     const rows = container.querySelectorAll(".order-row");
 
     rows.forEach((row, index) => {
-
       const button = row.querySelector(".remove-order");
 
       button.disabled = rows.length === 1;
-
-      button.setAttribute(
-        "aria-label",
-        `Remove item ${index + 1}`
-      );
-
+      button.setAttribute("aria-label", `Remove item ${index + 1}`);
     });
   }
 
+  // Add another order item
   addButton.addEventListener("click", function () {
-
     rowCount++;
 
     const row = document.createElement("div");
-
     row.className = "order-row row g-2 mb-3";
 
     row.innerHTML = `
       <div class="col-7">
-
-        <label for="item-${rowCount}" class="form-label">
-          Item
-        </label>
-
+        <label for="item-${rowCount}" class="form-label">Item</label>
         <input
           type="text"
           id="item-${rowCount}"
           name="item[]"
           class="form-control"
-          placeholder="e.g. Coke"
+          placeholder="e.g. Cola 1L"
+          maxlength="120"
           required
         >
-
       </div>
 
       <div class="col-3">
-
-        <label for="quantity-${rowCount}" class="form-label">
-          Quantity
-        </label>
-
+        <label for="quantity-${rowCount}" class="form-label">Quantity</label>
         <input
           type="number"
           id="quantity-${rowCount}"
@@ -223,44 +274,32 @@ document.addEventListener("DOMContentLoaded", function () {
           value="1"
           required
         >
-
       </div>
 
       <div class="col-2 d-flex align-items-end">
-
         <button
           type="button"
           class="btn btn-outline-danger remove-order"
           aria-label="Remove item ${rowCount}"
-        >
-          X
-        </button>
-
+        >X</button>
       </div>
     `;
 
     container.appendChild(row);
-
     updateRemoveButtons();
-
   });
 
+  // Remove an order item
   container.addEventListener("click", function (event) {
-
     const removeButton = event.target.closest(".remove-order");
 
     if (removeButton) {
-
       removeButton.closest(".order-row").remove();
-
       updateRemoveButtons();
-
     }
-
   });
 
   updateRemoveButtons();
-
 });
 </script>
 {% endblock %}

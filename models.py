@@ -46,6 +46,24 @@ class Order(db.Model):
             "status IN ('WAITING', 'IN_TRANSIT', 'COMPLETE', 'CANCELLED')",
             name="ck_orders_status",
         ),
+        
+
+        CheckConstraint(
+            """
+            (
+                order_type = 'WALK_IN'
+                AND address IS NULL
+            )
+            OR
+            (
+                order_type = 'DELIVERY'
+                AND address IS NOT NULL
+                AND length(trim(address)) > 0
+            )
+            """,
+            name="ck_orders_address_by_order_type",
+        ),
+
     )
 
 
