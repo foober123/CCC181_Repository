@@ -76,17 +76,7 @@
                     </p>
                     {% endif %}
 
-                    <p class="mb-1">
-                        <strong>Items:</strong>
-                    </p>
 
-                    <ul class="mb-2">
-                        {% for item in t.items %}
-                        <li>
-                            {{ item.product_name }} × {{ item.quantity }}
-                        </li>
-                        {% endfor %}
-                    </ul>
 
                     <p class="mb-0">
                         <strong>Status:</strong>
@@ -133,6 +123,10 @@
                         </button>
                     </form>
 
+
+
+                {% endif %}
+
                     <form method="POST"
                           action="{{ url_for('delete_ticket', ticket_id=t.id) }}"
                           data-confirm="Delete order {{ t.id }}? This cannot be undone.">
@@ -143,8 +137,6 @@
                     </form>
 
                 </div>
-
-                {% endif %}
 
             </div>
 
